@@ -17,4 +17,5 @@ const person = reactive({
 effect(() => {
     console.log(person.name)
     // person.name = 'jerry'  // effect 内改变 状态值 循环依赖收集 case
-})  
+})
+person.name = 'jerry'

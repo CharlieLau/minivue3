@@ -1,6 +1,7 @@
 
 import { isObject, hasOwn, hasChange } from '../shared/util'
 import { reactive } from './reactive'
+import { track, trigger } from './effect'
 
 const get = createGetter()
 const set = createSetter()
@@ -15,7 +16,8 @@ export const mutableHanlder = {
 function createGetter() {
     return function get(target, key, receiver) {
         const res = Reflect.get(target, key, receiver)
-        console.log('取值', key)
+        // console.log('取值', key)
+        track(target, 'get', key)
         if (isObject(res)) {
             return reactive(res)
         }
@@ -28,9 +30,11 @@ function createSetter() {
         const oldValue = target[key]
         const result = Reflect.set(target, key, value, receiver)
         if (!hasOwn(target, key)) {
-            console.log('设置新属性', key)
+            // console.log('设置新属性', key)
+            trigger(target, 'add', key, value)
         } else if (hasChange(value, oldValue)) {
-            console.log('设置值', key, value)
+            trigger(target, 'set', key, value, oldValue)
+            // console.log('设置值', key, value)
         }
         return result
     }

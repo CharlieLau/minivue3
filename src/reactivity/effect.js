@@ -8,12 +8,14 @@ export function effect(fn, options = {}) {
 let uid = 0
 
 let activeEffect = null
-let effectStack = []
+let effectStack = [] // 避免effect内 递归调用
 
 function createReactiveEffect(fn, options) {
 
     const effect = function () {
-
+        if (effectStack.includes(effect)) { // 避免effect内 递归调用
+            return;
+        }
         try {
             effectStack.push(effect)
             activeEffect = effect;
@@ -28,4 +30,39 @@ function createReactiveEffect(fn, options) {
     effect.options = options
     effect.deps = []
     return effect
+}
+
+
+// {a:1,b:2}:{ a: [effect1,effect2] }
+// weakMap(target) -> Map(key) -> Set(effect)
+const targetMap = new WeakMap()
+export function track(target, type, key) {
+
+    let depsMap = targetMap.get(targetMap)
+    if (!depsMap) {
+        targetMap.set(target, (depsMap = new Map()))
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+        depsMap.set(key, (dep = new Set()))
+    }
+
+    if (!dep.has(activeEffect)) {
+        dep.add(activeEffect)
+        activeEffect.deps.push(dep) // 相互引用 以备后用
+    }
+
+}
+
+export function trigger(target, type, key, value, oldValue) {
+    const depsMap = targetMap.get(target)
+    if (!depsMap) return;
+    function run(effects) {
+        if (effects) {
+            effects.forEach(effect => effect())
+        }
+    }
+    if (key !== null) {
+        run(depsMap.get(key))
+    }
 }
