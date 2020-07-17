@@ -1,8 +1,8 @@
 
 import { isObject, hasOwn, hasChange } from '../shared/util'
 import { reactive } from './reactive'
-const get = createGetter()
 
+const get = createGetter()
 const set = createSetter()
 
 
@@ -32,7 +32,6 @@ function createSetter() {
         } else if (hasChange(value, oldValue)) {
             console.log('设置值', key, value)
         }
-
         return result
     }
 }
