@@ -15,7 +15,12 @@ const person = reactive({
 
 
 effect(() => {
-    console.log(person.name)
+    // console.log(person.name)
+    console.log(JSON.stringify(person.arr))
     // person.name = 'jerry'  // effect 内改变 状态值 循环依赖收集 case
 })
-person.name = 'jerry'
+// person.name = 'jerry'
+
+
+person.arr[2] = 100
+person.arr.push(300)

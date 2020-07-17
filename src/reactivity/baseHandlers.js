@@ -27,9 +27,10 @@ function createGetter() {
 
 function createSetter() {
     return function set(target, key, value, receiver) {
+        const hasKey = hasOwn(target, key)
         const oldValue = target[key]
         const result = Reflect.set(target, key, value, receiver)
-        if (!hasOwn(target, key)) {
+        if (!hasKey) {
             // console.log('设置新属性', key)
             trigger(target, 'add', key, value)
         } else if (hasChange(value, oldValue)) {

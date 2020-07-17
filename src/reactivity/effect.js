@@ -7,12 +7,12 @@ export function effect(fn, options = {}) {
 }
 let uid = 0
 
-let activeEffect = null
+let activeEffect
 let effectStack = [] // 避免effect内 递归调用
 
 function createReactiveEffect(fn, options) {
 
-    const effect = function () {
+    const effect = function reactiveEffect() {
         if (effectStack.includes(effect)) { // 避免effect内 递归调用
             return;
         }
@@ -37,8 +37,10 @@ function createReactiveEffect(fn, options) {
 // weakMap(target) -> Map(key) -> Set(effect)
 const targetMap = new WeakMap()
 export function track(target, type, key) {
-
-    let depsMap = targetMap.get(targetMap)
+    if (activeEffect === undefined) {
+        return;
+    }
+    let depsMap = targetMap.get(target)
     if (!depsMap) {
         targetMap.set(target, (depsMap = new Map()))
     }
@@ -46,7 +48,6 @@ export function track(target, type, key) {
     if (!dep) {
         depsMap.set(key, (dep = new Set()))
     }
-
     if (!dep.has(activeEffect)) {
         dep.add(activeEffect)
         activeEffect.deps.push(dep) // 相互引用 以备后用
@@ -64,5 +65,9 @@ export function trigger(target, type, key, value, oldValue) {
     }
     if (key !== null) {
         run(depsMap.get(key))
+    }
+    if (type === 'add') {
+        // array push 的时候 会先取length  所以 depMap会有length的收集
+        run(depsMap.get(Array.isArray(target) ? 'length' : ''))
     }
 }
